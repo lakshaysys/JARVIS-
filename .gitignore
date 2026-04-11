@@ -1,0 +1,20 @@
+# Firebase Private Keys
+config/serviceAccountKey.json
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual Environments
+javeirs_env/
+venv/
+.env
+
+# Audio and Image Scans
+*.mp3
+scans/
+scan.jpg
+
+# IDE settings
+.idx/
+.vscode/

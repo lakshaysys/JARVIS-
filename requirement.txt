@@ -1,0 +1,19 @@
+# --- J.A.V.E.I.R.S. Dependencies ---
+
+# Firebase & Google AI
+firebase-admin
+google-generativeai
+
+# Voice & Audio
+SpeechRecognition
+edge-tts
+pygame
+PyAudio
+
+# Vision & OCR
+opencv-python
+pytesseract
+
+# Utilities
+pyyaml
+python-dotenv
