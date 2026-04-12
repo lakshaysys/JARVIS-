@@ -18,3 +18,4 @@ scan.jpg
 # IDE settings
 .idx/
 .vscode/
+.env

@@ -1,48 +1,47 @@
 # To learn more about how to use Nix to configure your environment
 # see: https://developers.google.com/idx/guides/customize-idx-env
-{nodejs_22pkgs, ... }: {
+{ pkgs, ... }: {
   # Which nixpkgs channel to use.
-  channel = "stable-24.11"; # or "unstable"
-  # Use https://search.nixos.org/packages to find packages
+  channel = "stable-23.11";
+
+  # Use pkgs to install the software J.A.V.E.I.R.S. needs
   packages = [
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
-    # pkgs.nodejs_22
-    # pkgs.nodePackages.nodemon
-  ];
+    pkgs.python311Full
+    pkgs.python311Packages.pip
+    pkgs.tesseract
+    pkgs.portaudio
+    pkgs.pkg-config
+    pkgs.nodePackages.firebase-tools
+ 
+    pkgs.python311Full
+    pkgs.python311Packages.pip
+    pkgs.tesseract
+    pkgs.portaudio
+    pkgs.pkg-config
+    # ADD THESE FOR OPENCV:
+    pkgs.xorg.libxcb
+    pkgs.libxkbcommon
+    pkgs.libGL
+   ];
+
   # Sets environment variables in the workspace
-  env = {};
+  env = {
+    # You can add environment variables here if needed
+  };
+
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      # "vscodevim.vim"
-      "google.gemini-cli-vscode-ide-companion"
+      "ms-python.python"
+      "google.gemini-code-assistant-dev"
     ];
-    # Enable previews
-    previews = {
-      enable = true;
-      previews = {
-        # web = {
-        #   # Example: run "npm run dev" with PORT set to IDX's defined port for previews,
-        #   # and show it in IDX's web preview panel
-        #   command = ["npm" "run" "dev"];
-        #   manager = "web";
-        #   env = {
-        #     # Environment variables to set for your server
-        #     PORT = "$PORT";
-        #   };
-        # };
-      };
-    };
+
     # Workspace lifecycle hooks
     workspace = {
       # Runs when a workspace is first created
       onCreate = {
         # Example: install JS dependencies from NPM
         # npm-install = "npm install";
-        # Open editors for the following files by default, if they exist:
-        default.openFiles = [ ".idx/dev.nix" "README.md" ];
       };
       # Runs when the workspace is (re)started
       onStart = {
