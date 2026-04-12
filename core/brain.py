@@ -1,20 +1,19 @@
 import os
+from google import genai
 from dotenv import load_dotenv
-from google import genai # New import
 
 load_dotenv()
 
 class JaveirsBrain:
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY")
-        # Initialize the new Client
-        self.client = genai.Client(api_key=api_key)
-        self.model_id = "gemini-1.5-flash"
+        # This links J.A.V.E.I.R.S. to my Gemini 1.5 Flash brain
+        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        self.model = "gemini-1.5-flash"
 
-    def process_logic(self, query):
-        """Sends user input to the cloud brain."""
+    def process_logic(self, user_input):
+        """Sends your command to me to decide what to do."""
         response = self.client.models.generate_content(
-            model=self.model_id, 
-            contents=query
+            model=self.model,
+            contents=user_input
         )
         return response.text

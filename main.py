@@ -1,70 +1,96 @@
 import asyncio
+import os
 import speech_recognition as sr
-# Corrected Imports
+import firebase_admin
+from firebase_admin import credentials, firestore
+from dotenv import load_dotenv
+
+# Import your custom modules
 from core.brain import JaveirsBrain
 from modules.vision import JaveirsVision
 from modules.defense import DefenseSystem
 
+# Load API keys from .env
+load_dotenv()
+
 async def run_javeirs():
-    # Initialize the systems
-    brain = JaveirsBrain()
-    vision = JaveirsVision()
-    security = DefenseSystem()
-    
-    recognizer = sr.Recognizer()
-    mic = sr.Microphone()
+    print("--- STARTING J.A.V.E.I.R.S. CORE ---")
 
-    # Startup Greeting
-    await brain.speak("Systems online. J.A.V.E.I.R.S. is ready for your command, Lakshay.")
+    # 1. INITIALIZE FIREBASE (Must happen before DefenseSystem)
+    if not firebase_admin._apps:
+        try:
+            # Ensure this file exists in your config folder!
+            cred = credentials.Certificate("config/serviceAccountKey.json")
+            firebase_admin.initialize_app(cred)
+            print("[System] Firebase connection established.")
+        except Exception as e:
+            print(f"[Fatal Error] Could not initialize Firebase: {e}")
+            return
 
+    # 2. INITIALIZE CORE MODULES
+    try:
+        brain = JaveirsBrain()
+        vision = JaveirsVision()
+        security = DefenseSystem()
+        
+        recognizer = sr.Recognizer()
+        # Note: This requires PyAudio to be installed via dev.nix
+        mic = sr.Microphone()
+        
+        print("[System] All hardware modules linked.")
+    except Exception as e:
+        print(f"[Fatal Error] Module initialization failed: {e}")
+        return
+
+    # 3. STARTUP GREETING
+    startup_msg = "Systems online. I am ready for your command, Master Lakshay."
+    print(f"J.A.V.E.I.R.S.: {startup_msg}")
+    # await brain.speak(startup_msg) # Uncomment if you have edge-tts ready
+
+    # 4. MAIN COMMAND LOOP
     while True:
         with mic as source:
             recognizer.adjust_for_ambient_noise(source, duration=0.5)
-            print("\nListening...")
+            print("\n[Listening...]")
             try:
-                # Set a timeout so it doesn't wait forever if you aren't talking
-                audio = recognizer.listen(source, timeout=5, phrase_time_limit=8)
+                audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
             except sr.WaitTimeoutError:
                 continue
 
         try:
-            print("Processing...")
+            # Convert speech to text
             query = recognizer.recognize_google(audio).lower()
-            print(f"You: {query}")
+            print(f"Lakshay: {query}")
 
-            # 1. Defense Mode Commands
+            # COMMAND: Defense Protocols
             if "activate defense mode" in query:
-                msg = security.toggle_defense_mode(True)
-                await brain.speak(msg)
+                status = security.toggle_defense_mode(True)
+                print(f"J.A.V.E.I.R.S.: {status}")
             
-            elif "deactivate defense mode" in query:
-                msg = security.toggle_defense_mode(False)
-                await brain.speak(msg)
+            # COMMAND: Optical Scanning
+            elif "scan environment" in query or "identify" in query:
+                print("J.A.V.E.I.R.S.: Initiating optical sensors...")
+                result = vision.scan_and_read()
+                print(f"J.A.V.E.I.R.S.: {result}")
 
-            # 2. Vision / Scanning Commands
-            elif "scan" in query or "identify" in query:
-                await brain.speak("Initializing optical sensors. Scanning now.")
-                scan_result = vision.scan_and_read()
-                await brain.speak(scan_result)
-
-            # 3. Shutdown Command
-            elif "exit" in query or "shutdown" in query or "sleep" in query:
-                await brain.speak("Powering down all systems. Goodbye, Lakshay.")
+            # COMMAND: System Exit
+            elif "shutdown" in query or "goodbye" in query:
+                print("J.A.V.E.I.R.S.: Powering down. Security protocols remain active.")
                 break
 
-            # 4. General AI Conversation
+            # DEFAULT: Artificial Intelligence Logic (Gemini)
             else:
-                response = brain.process_logic(query)
-                await brain.speak(response)
+                reply = brain.process_logic(query)
+                print(f"J.A.V.E.I.R.S.: {reply}")
 
         except sr.UnknownValueError:
-            # This happens if it hears noise but no words
-            pass
+            # This happens if it hears noise but no clear words
+            pass 
         except Exception as e:
-            print(f"System Note: {e}")
+            print(f"[Runtime Error]: {e}")
 
 if __name__ == "__main__":
     try:
         asyncio.run(run_javeirs())
     except KeyboardInterrupt:
-        print("\nManual override: J.A.V.E.I.R.S. offline.")
+        print("\n[Manual Override] J.A.V.E.I.R.S. Offline.")

@@ -1,53 +1,35 @@
-# To learn more about how to use Nix to configure your environment
-# see: https://developers.google.com/idx/guides/customize-idx-env
 { pkgs, ... }: {
-  # Which nixpkgs channel to use.
   channel = "stable-23.11";
 
-  # Use pkgs to install the software J.A.V.E.I.R.S. needs
   packages = [
+    # --- Python Base ---
     pkgs.python311Full
     pkgs.python311Packages.pip
-    pkgs.tesseract
-    pkgs.portaudio
-    pkgs.pkg-config
-    pkgs.nodePackages.firebase-tools
- 
-    pkgs.python311Full
-    pkgs.python311Packages.pip
-    pkgs.tesseract
-    pkgs.portaudio
-    pkgs.pkg-config
-    # ADD THESE FOR OPENCV:
+    
+    # --- System Tools (Essential for J.A.V.E.I.R.S. to work) ---
+    pkgs.tesseract      
+    pkgs.portaudio      
+    pkgs.pkg-config     
+    pkgs.flac           
+    
+    # --- Graphics Libraries for Vision ---
     pkgs.xorg.libxcb
     pkgs.libxkbcommon
     pkgs.libGL
-   ];
 
-  # Sets environment variables in the workspace
+    # --- Firebase Tools ---
+    pkgs.nodePackages.firebase-tools
+  ];
+
   env = {
-    # You can add environment variables here if needed
+    # This helps OpenCV find the correct drivers
+    LD_LIBRARY_PATH = "${pkgs.libGL}/lib:${pkgs.libxkbcommon}/lib:${pkgs.xorg.libxcb}/lib";
   };
 
   idx = {
-    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
       "ms-python.python"
       "google.gemini-code-assistant-dev"
     ];
-
-    # Workspace lifecycle hooks
-    workspace = {
-      # Runs when a workspace is first created
-      onCreate = {
-        # Example: install JS dependencies from NPM
-        # npm-install = "npm install";
-      };
-      # Runs when the workspace is (re)started
-      onStart = {
-        # Example: start a background task to watch and re-build backend code
-        # watch-backend = "npm run watch-backend";
-      };
-    };
   };
 }
