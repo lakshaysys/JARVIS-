@@ -1,6 +1,7 @@
 # J.A.V.E.I.R.S. 🤖
 **Just A Very Intelligent Robust System**
 
+
 J.A.V.E.I.R.S. is a high-level personal AI assistant built with Python and integrated with Firebase. It features a conversational "brain" powered by Gemini, vision capabilities, and a specialized defense mode.
 
 ## 🌟 Key Features
