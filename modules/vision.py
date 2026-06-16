@@ -1,53 +1,53 @@
-import cv2
-import pytesseract # Make sure to install: pip install pytesseract
 import os
-
-# If you are on Windows, you must point to where Tesseract is installed:
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import cv2
+import pytesseract
 
 class JaveirsVision:
     def __init__(self):
-        self.camera_index = 0
-        self.save_path = "scans/captured_plate.jpg"
-        
-        # Create folder if it doesn't exist
-        if not os.path.exists("scans"):
-            os.makedirs("scans")
+        """Initializes optical sensors and scans directory."""
+        self.output_dir = "scans"
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+        print("[System] Optical sensors calibrated.")
 
     def scan_and_read(self):
-        """Captures an image and extracts text (Number Plate Recognition)."""
-        cap = cv2.VideoCapture(self.camera_index)
+        """Captures a frame from the camera and processes it for text (OCR)."""
+        # 0 is usually the default built-in webcam
+        cap = cv2.VideoCapture(0)
         
         if not cap.isOpened():
-            return "Error: System could not access the optical sensors."
+            return "Optical sensor failure: Unable to open camera feed."
 
-        # Give the camera a second to adjust to light
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        
-        ret, frame = cap.read()
-        cap.release()
+        # Allow camera to adjust to lighting
+        for _ in range(5):
+            ret, frame = cap.read()
 
         if ret:
-            # 1. Save the raw image
-            cv2.imwrite(self.save_path, frame)
+            # Save the raw capture
+            img_path = os.path.join(self.output_dir, "last_scan.jpg")
+            cv2.imwrite(img_path, frame)
             
-            # 2. Process for OCR (Convert to Grayscale for better reading)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            # Convert to grayscale to help the OCR engine read better
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             
-            # 3. Use Tesseract to read the text
-            text = pytesseract.image_to_string(gray, config='--psm 7') # PSM 7 is for single lines
-            
-            clean_text = text.strip()
-            
-            if clean_text:
-                return f"Scan successful. Detected text: {clean_text}"
-            else:
-                return "Scan complete, but no clear text was identified on the plate."
-        
-        return "System failed to capture frame."
+            # Extract text from the image
+            try:
+                extracted_text = pytesseract.image_to_string(gray_frame).strip()
+            except Exception as e:
+                extracted_text = f"OCR engine error: {str(e)}"
 
-# --- Quick Test ---
-if __name__ == "__main__":
-    vision = JaveirsVision()
-    print(vision.scan_and_read())
+            cap.release()
+            
+            if extracted_text:
+                return f"Scan complete. Data read: '{extracted_text}'"
+            else:
+                return "Scan complete. No legible data detected in visual field."
+        
+        cap.release()
+        return "Optical sensor failure: Frame capture timed out."
+
+    def process_frame_for_objects(self, frame):
+        """Placeholder for custom matrix operations or edge detection."""
+        # This converts the image to show distinct outlines/edges
+        edges = cv2.Canny(frame, 100, 200)
+        return edges
