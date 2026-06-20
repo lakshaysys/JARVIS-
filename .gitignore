@@ -19,3 +19,14 @@ scan.jpg
 .idx/
 .vscode/
 .env
+# Ignore the virtual environment libraries
+javeirs_env/
+.idx/
+
+# Ignore your private API keys and Firebase keys
+.env
+config/serviceAccountKey.json
+
+# Ignore local scans and logs
+scans/
+*.log
