@@ -1,19 +1,51 @@
-# --- J.A.V.E.I.R.S. Dependencies ---
+import os
+import sys
+import subprocess
+import pkg_resources
 
-# Firebase & Google AI
-firebase-admin
-google-generativeai
+def verify_and_install_requirements(requirements_file="requirements.txt"):
+    """Scans requirements.txt and installs any missing packages automatically, sir."""
+    if not os.path.exists(requirements_file):
+        print(f"Warning: '{requirements_file}' not found. Skipping dependency auto-check, sir.")
+        return
 
-# Voice & Audio
-SpeechRecognition
-edge-tts
-pygame
-PyAudio
+    print("Initiating dependency audit via requirements.py, sir...")
+    
+    with open(requirements_file, "r") as f:
+        # Read lines, strip whitespace, and ignore comments or flags like --prefer-binary
+        required_packages = [
+            line.strip().split(";#")[0].split()[0] 
+            for line in f 
+            if line.strip() and not line.startswith("#") and not line.startswith("-")
+        ]
 
-# Vision & OCR
-opencv-python
-pytesseract
+    installed_packages = {pkg.key for pkg in pkg_resources.working_set}
+    
+    # Map common package names to their pip distribution keys if they differ
+    name_mappings = {
+        "opencv-python-headless": "opencv-python-headless",
+        "python-dotenv": "python-dotenv",
+        "google-genai": "google-genai",
+        "firebase-admin": "firebase-admin"
+    }
 
-# Utilities
-pyyaml
-python-dotenv
+    missing_packages = []
+    for pkg in required_packages:
+        # Clean package name for lookup
+        clean_name = pkg.split("==")[0].split(">=")[0].split("<=")[0].lower()
+        if clean_name not in installed_packages:
+            missing_packages.append(pkg)
+
+    if missing_packages:
+        print(f"Detected {len(missing_packages)} missing dependency/dependencies: {missing_packages}")
+        print("Deploying pip to resolve and install missing packages...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--user"] + missing_packages)
+            print("All missing dependencies successfully integrated, sir.")
+        except subprocess.CalledProcessError as e:
+            print(f"Critical error during automated package installation: {e}", file=sys.stderr)
+    else:
+        print("All dependencies accounted for and verified. System baseline secure, sir.")
+
+if __name__ == "__main__":
+    verify_and_install_requirements()
