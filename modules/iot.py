@@ -1,19 +1,62 @@
 import os
-import platform
+import firebase_admin
+from firebase_admin import credentials, firestore
+from datetime import datetime
 
-class IOTControl:
-    def __init__(self):
-        self.os_type = platform.system()
+class JaveirsIoTManager:
+    def __init__(self, credentials_path: str = None):
+        """Initializes Firebase Firestore connection for IoT and home defense logging."""
+        try:
+            if not firebase_admin._apps:
+                if credentials_path and os.path.exists(credentials_path):
+                    cred = credentials.Certificate(credentials_path)
+                    firebase_admin.initialize_app(cred)
+                else:
+                    # Fallback to application default credentials or environment configs
+                    firebase_admin.initialize_app()
+            
+            self.db = firestore.client()
+            print("IoT & Firebase memory subsystem initialized successfully, sir.")
+        except Exception as e:
+            print(f"Warning: Firebase initialization failed. Operating in local offline mode: {e}")
+            self.db = None
 
-    def shutdown_system(self):
-        """Allows J.A.V.E.I.R.S. to turn off the computer."""
-        if self.os_type == "Windows":
-            os.system("shutdown /s /t 1")
-        else:
-            os.system("sudo shutdown now")
+    def update_device_state(self, device_id: str, status: str, metadata: dict = None):
+        """Updates or registers an IoT node state in Firestore."""
+        if not self.db:
+            return "Database offline, sir. Action simulated locally."
+        
+        try:
+            payload = {
+                "device_id": device_id,
+                "status": status,
+                "timestamp": datetime.utcnow(),
+                "metadata": metadata or {}
+            }
+            self.db.collection("iot_devices").document(device_id).set(payload, merge=True)
+            return f"Device '{device_id}' state updated to '{status}', sir."
+        except Exception as e:
+            return f"Failed to update device state in database: {e}"
 
-    def open_application(self, app_name):
-        """Example: 'Jarvis, open Chrome'"""
-        # This is a simple version; advanced version uses subprocess
-        os.system(f"start {app_name}")
-        return f"Opening {app_name} now, Master Lakshay."
+    def log_security_event(self, event_type: str, severity: str, details: str):
+        """Logs a defense or security alert to Firebase."""
+        if not self.db:
+            return "Database offline. Security event logged locally."
+        
+        try:
+            event_data = {
+                "event_type": event_type,
+                "severity": severity,
+                "details": details,
+                "timestamp": datetime.utcnow()
+            }
+            self.db.collection("security_logs").add(event_data)
+            return f"Security event logged: [{severity.upper()}] {event_type}, sir."
+        except Exception as e:
+            return f"Critical error logging security event: {e}"
+
+# Quick diagnostic block if executed independently
+if __name__ == "__main__":
+    iot = JaveirsIoTManager()
+    print(iot.update_device_state("perimeter_cam_01", "ACTIVE", {"resolution": "1080p"}))
+    
